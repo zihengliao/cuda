@@ -37,8 +37,8 @@ __global__ void mmul(const float *A, const float *B, float *C, int ds) {
     for (int i = 0; i < ds/block_size; i++) {
 
       // Load data into shared memory
-      As[threadIdx.y][threadIdx.x] = A[FIXME];
-      Bs[threadIdx.y][threadIdx.x] = B[FIXME];
+      As[threadIdx.y][threadIdx.x] = A[threadIdx.y][threadIdx.x];    // fix
+      Bs[threadIdx.y][threadIdx.x] = B[threadIdx.y][threadIdx.x];
 
       // Synchronize
       __syncthreads();
