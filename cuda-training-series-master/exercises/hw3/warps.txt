@@ -1,0 +1,31 @@
+
+
+when executing an instruction on gpu, it will automatically allocate instructions
+in warps. Each warp contains 32 threads. 
+
+Lets say you ask the gpu to use 48 threads, it will assign the instruction to
+2 warps where the first warp all threads will be used, the 2nd warp, only the first 16 threads
+are active, but the second half won't do anything despite it being used.
+
+There is almost no to negligble performance loss when asking gpu to schedule more
+warps/threads as opposed to a smaller amount of warps/threads.
+
+Performance is measured in clock cycles in GPU. Everything you do has latency which
+is measured in clock cycles. For example, to perform an arithmetic calculation,
+this will take in orders of <10 clock cycles.
+
+Read instructions are executed immediately, but may take a couple clock cycles to return a value.
+
+Your goal is to "hide" latency by having an instruction execute every clock cycle.
+This means running multiple warps concurrently and having them executing instructions
+every clock cycle to make sure the GPU is busy.
+
+## Question to self, why can't you have all the warps executing an instruction on the
+    same clock cycle and then having them wait again until it's executed to perfrom the next
+    instruction?
+
+    - Because we only have limited ALUs and LD/ST units. We want to maximise throughput
+    by keeping the GPU busy constantly 
+
+You also have to be very aware of the GPU architecture since different GPUs have different
+amount of units
