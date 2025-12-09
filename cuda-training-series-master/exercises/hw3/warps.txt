@@ -85,3 +85,18 @@ This is a common suggestion I get from CMD:
 -     INF   This workload is utilizing greater than 80.0% of the available compute or memory performance of the device.   
           To further improve performance, work will likely need to be shifted from the most utilized to another unit.   
           Start by analyzing DRAM in the Memory Workload Analysis section.
+
+The reason why test2 runs the best because an SM be pushed to the max with 1536 threads
+since 1536 is divisible by 512 as opposed to 1024. This is also the reason why max threads
+per SM is bigger than per block to reduce latency.
+
+Imagine the scenario if max SM was 1024 which is the same amount as max threads in a block.
+After 1 instruction, it would have to wait until that block is done before being able to
+execute the next instruction
+
+Blocks are only programmer's abstraction. During execution, everything is executed in warps.
+But then when I run 1024 threads per block, why am I only using 32 warps. I mean I get that
+if I use 2 blocks, I will exceed the thread limit per SM. But why can't I divide the
+block into half to use the other 16 warps and allocate it back to the original SM
+
+There's still so much i don't understand such as register limits and memory in general
