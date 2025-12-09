@@ -29,3 +29,59 @@ every clock cycle to make sure the GPU is busy.
 
 You also have to be very aware of the GPU architecture since different GPUs have different
 amount of units
+
+For my 3060Ti, I have:
+- 38SM
+- 1x SM can process:
+    - 48 warps
+    - 1536 threads = 48 warps x 32 threads
+    - 32 blocks
+
+1x block can have:
+    - 1024 threads
+    - 32 warps = 1024 threads / 32 threads
+
+
+
+Tests:
+
+Test1 
+    - 38SM x 32 blocks = 1216 blocks
+    - 1024 threads
+    - Duration                         us       976.45
+    - Memory Throughput                 %        94.85
+
+Test2 
+    - 38SM x 32 blocks = 1216 blocks
+    - 512 threads
+    - Duration                         us       974.02
+    - Memory Throughput                 %        95.05
+
+Test3 
+    - 38SM x 32 blocks = 1216 blocks
+    - 256 threads
+    - Duration                         us       982.02
+    - Memory Throughput                 %        94.30
+
+Test4 - testing excessive blocks:
+    - 100000 blocks
+    - 512 threads
+    - Duration                         ms         1.03
+    - Memory Throughput                 %        89.75
+
+Test 5:
+    - 1216 blocks
+    - 1536 threads
+    - does not work since threads exceed max possible amount per block
+
+Test 6:
+    - 1216 blocks
+    - 64 threads
+    - Duration                         us       988.54
+    - Memory Throughput                 %        93.75
+
+
+This is a common suggestion I get from CMD:
+-     INF   This workload is utilizing greater than 80.0% of the available compute or memory performance of the device.   
+          To further improve performance, work will likely need to be shifted from the most utilized to another unit.   
+          Start by analyzing DRAM in the Memory Workload Analysis section.
