@@ -1,0 +1,59 @@
+learnt about memory heirachy in nvidia gpu
+
+to access global memory, you have L1->L2->GMEM
+shared memory doesn't seem to have a cache and is located per SM 
+
+with GMEM and caches, you access memory through a "memory line"
+
+this means:
+- memory addresses are stored in a line
+- when you access, memory you generally want to access them close together
+- a warp will access memory in chunks
+    - so L1 cache is 128 bytes at a time
+    - l2 cache is 32 bytes at a time
+- you want your data to be either in the same chunk or very close to the same chunks
+    - this is called coalescing
+- if you have data in different chunks, this means you need to perform more
+    fetch actions which means more latency
+
+
+with shared memory, you have "banks"
+- there are 32 banks in each shared memory block
+- think of banks as aisles at stores
+- each bank width is 4 bytes wides and can only provide 4 bytes per cycle
+- but banks hold much more than 4 bytes
+- eg: you define variable __shared__ float s[1024]
+- access looks like this:
+
+    Bank 0: s[0], s[32], s[64], s[96], ...
+    Bank 1: s[1], s[33], s[65], s[97], ...
+    Bank 2: s[2], s[34], s[66], s[98], ...
+
+    - s[0] → byte 0 → (0/4)%32 = 0 → bank 0
+    - s[1] → byte 4 → (4/4)%32 = 1 → bank 1
+    - s[2] → byte 8 → (8/4)%32 = 2 → bank 2
+    - s[31] → byte 124 → (124/4)%32 = 31 → bank 31
+    - s[32] → byte 128 → (128/4)%32 = 0 → wraps to bank 0
+    - s[33] → bank 1
+
+- the main thing that causes latency amongst banks is "bank conflict"
+- so imagine each thread wants to access bank 0 but different addresses 
+    (imagine different points in the aisle)
+- it would take the threads 32 times slower since they
+    will be basically fetching the data sequentially
+
+
+- to fix this, you can add "padding" to your "bank"
+
+without padding:
+Row 0: | 0 | 1 | 2 | ... | 31 |
+Row 1: | 0 | 1 | 2 | ... | 31 |
+Row 2: | 0 | 1 | 2 | ... | 31 |
+
+with padding:
+Row 0: | 0 | 1 | 2 | ... | 31 | PAD |
+Row 1:        starts at bank 1
+Row 2:        starts at bank 2
+Row 3:        starts at bank 3
+...
+Row 31:       starts at bank 31
